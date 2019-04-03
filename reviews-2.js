@@ -210,7 +210,7 @@ const generateSiteMaps = async () => {
             }
         } = res;
 
-        console.log("url: ", requestObject(page).url);
+        console.log("request url: ", requestObject(page).url);
 
         if (pageSize === 1) {
           totalPages = 1; // just so 1 result is operated on
@@ -226,7 +226,6 @@ const generateSiteMaps = async () => {
             closeFuncs[fn.name] = fn;
         });
 
-        console.log("page: ", page);
         page++;
     } while (page < totalPages);
 
