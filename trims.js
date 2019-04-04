@@ -63,7 +63,7 @@ const makeRequest = async () => {
         });
 
         page++;
-    } while (page < totalPages);
+    } while (page <= totalPages);
 
     elem.close();
 }

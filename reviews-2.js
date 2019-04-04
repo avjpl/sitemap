@@ -227,7 +227,7 @@ const generateSiteMaps = async () => {
         });
 
         page++;
-    } while (page < totalPages);
+    } while (page <= totalPages);
 
     Object.keys(closeFuncs).map(fn => {
         closeFuncs[fn]();

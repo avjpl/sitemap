@@ -20,7 +20,7 @@ let page = 1;
 const requestObject = page => ({
   method: "get",
   headers: { "x-api-key": API_KEY },
-  url: `https://search-api.hmhost.co.uk/prod/articles?derivative.articleType=advice?pageSize=${pageSize}&page=${page}`
+    url: `https://search-api.hmhost.co.uk/prod/articles?derivative.articleType=advice&pageSize=${pageSize}&page=${page}`
 });
 
 const now = new Date();
@@ -42,17 +42,18 @@ const makeRequest = async () => {
         results.map(result => {
             const {
                 cmsId,
-                derivative,
                 derivative: { articleType, adviceType, title } = {},
             } = result;
 
+            console.log({ articleType, adviceType, title, cmsId });
+            
             const url = `${baseUrl}/${articleType}/${adviceType}/${title}/${cmsId}`;
 
             elem.push({ url: [ { loc: url }, { lastmod: dateFormat(now, 'yyyy/mm/dd')} ] });
         });
 
         page++;
-    } while (page < totalPages);
+    } while (page <= totalPages);
 
     elem.close();
 }
