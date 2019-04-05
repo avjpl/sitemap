@@ -20,7 +20,7 @@ let page = 1;
 const requestObject = page => ({
   method: "get",
   headers: { "x-api-key": API_KEY },
-  url: `https://search-api.hmhost.co.uk/prod/derivatives?pageSize=100`
+  url: `https://search-api.hmhost.co.uk/prod/derivatives?pageSize=${pageSize}&page=${page}`
 });
 
 const now = new Date();

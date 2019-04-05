@@ -7,10 +7,15 @@
   },
   "license": "MIT",
   "dependencies": {
+    "aws-sdk": "^2.436.0",
     "axios": "^0.18.0",
     "dateformat": "^3.0.3",
     "dotenv": "^7.0.0",
     "global": "^4.3.2",
+    "s3-upload-stream": "^1.0.7",
+    "sitemap": "^2.1.0",
+    "string-to-stream": "^1.1.1",
+    "uuid": "^3.3.2",
     "xml": "^1.0.1"
   },
   "devDependencies": {
