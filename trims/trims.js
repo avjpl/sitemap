@@ -1,25 +1,20 @@
-const dateFormat = require('dateformat')
+// const dateFormat = require('dateformat')
 const request = require('axios');
-const xml = require('xml');
-const fs = require("fs");
-// const AWS = require('aws-sdk');
-// const s3Upload = require("s3-upload-stream");
+const sm = require("sitemap");
+const str = require("string-to-stream");
+const AWS = require('aws-sdk');
+const s3Upload = require("s3-upload-stream");
 
-// const s3Stream = s3Upload(new AWS.S3());
+const s3Stream = s3Upload(new AWS.S3());
 
+// TODO: pull from secrets manager
 const { parsed: { API_KEY } } = require("dotenv").config();
 
-const fileWriteStream = fs.createWriteStream("./trims-sitemap.xml");
-const elem = xml.element({ _attr: { xmlns: 'http://www.sitemaps.org/schemas/sitemap/0.9' } });
-const xmlStream = xml({ urlset: elem }, { stream: true });
-
-// xmlStream.on('data', chunk => { console.log("xml data:", chunk) });
-// xmlStream.on('end', () => { console.log('complete') });
-xmlStream.pipe(fileWriteStream);
-
 const baseUrl = 'https://www.whatcar.com';
-let pageSize = 100;
+let pageSize = 1;
 let page = 1;
+const urls = [];
+const bucketName = "sitemap-t-1";
 
 const requestObject = page => ({
   method: "get",
@@ -27,16 +22,18 @@ const requestObject = page => ({
   url: `https://search-api.hmhost.co.uk/prod/reviews?pageSize=${pageSize}&page=${page}`
 });
 
-const now = new Date();
+const upload = s3Stream.upload({
+    "Bucket": bucketName,
+    "Key": `trims-sitemap.xml`
+});
 
-// const upload = s3Stream.upload({
-//     "Bucket": 'test',
-//     "Key": 'trims-sitemap.xml'
-// });
+upload.on('error', err => {
+    console.error('error: ', err);
+});
 
-// upload.on('uploaded', (details) => {
-//     console.log(details);
-// });
+upload.on('uploaded', details => {
+    console.info('info: ', details);
+});
 
 const makeRequest = async () => {
     let totalPages;
@@ -70,15 +67,31 @@ const makeRequest = async () => {
 
                 const url = `${baseUrl}/${make}/${range}/${bodyStyle}/trim/${urlTitle}/${hamId}`;
 
-                if (make !== undefined && range !== undefined && bodyStyle !== undefined)
-                    elem.push({ url: [{ loc: url }, { lastmod: dateFormat(now, 'yyyy/mm/dd')} ] });
+                urls.push({
+                    url,
+                    lastmodISO: '2015-06-27T15:30:00.000Z'
+                });
             });
         });
 
         page++;
     } while (page <= totalPages);
 
-    elem.close();
+    sitemap = sm.createSitemap({
+        xmlNs: 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+        xslUrl: '',
+        hostname: baseUrl,
+        urls: urls
+    });
+
+    sitemap.toXML((err, xml) => {
+        if (err) {
+          console.error('error: ', xml);
+        }
+    });
+
+    const read = str(sitemap.toString());
+    read.pipe(upload);
 }
 
 makeRequest();

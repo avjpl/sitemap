@@ -2,14 +2,10 @@ const dateFormat = require('dateformat')
 const request = require('axios');
 const xml = require('xml');
 const fs = require("fs");
-// const AWS = require('aws-sdk');
-// const s3Upload = require("s3-upload-stream");
-
-// const s3Stream = s3Upload(new AWS.S3());
 
 const { parsed: { API_KEY } } = require("dotenv").config();
 
-const fileWriteStream = fs.createWriteStream("./trims-sitemap.xml");
+const fileWriteStream = fs.createWriteStream("./landing-pages-sitemap.xml");
 const elem = xml.element({ _attr: { xmlns: 'http://www.sitemaps.org/schemas/sitemap/0.9' } });
 const xmlStream = xml({ urlset: elem }, { stream: true });
 
@@ -29,15 +25,6 @@ const requestObject = page => ({
 
 const now = new Date();
 
-// const upload = s3Stream.upload({
-//     "Bucket": 'test',
-//     "Key": 'trims-sitemap.xml'
-// });
-
-// upload.on('uploaded', (details) => {
-//     console.log(details);
-// });
-
 const makeRequest = async () => {
     let totalPages;
 
@@ -46,7 +33,7 @@ const makeRequest = async () => {
         const {
             data: {
                 pagination: { total, pageSize } = {},
-                results,
+                filterBreakdown: { category, make },
             }
         } = res;
 
@@ -56,23 +43,18 @@ const makeRequest = async () => {
             totalPages = Math.ceil(total / pageSize);
         }
 
-        results.map(item => {
-            const {
-                derivative: { make, range, bodyStyle } = {},
-                trims
-            } = item;
+        make.map(m => {
+            const { key } = m;
 
-            trims.map(trim => {
-                const {
-                    urlTitle,
-                    hamId
-                } = trim;
+            elem.push({ url: [{ loc: `${baseUrl}/make/${key}` }, { lastmod: dateFormat(now, 'yyyy/mm/dd')} ] });
+            elem.push({ url: [{ loc: `${baseUrl}/new-car-deals/make/${key}` }, { lastmod: dateFormat(now, 'yyyy/mm/dd')} ] });
+        });
 
-                const url = `${baseUrl}/${make}/${range}/${bodyStyle}/trim/${urlTitle}/${hamId}`;
+        category.map(c => {
+            const { key } = c;
 
-                if (make !== undefined && range !== undefined && bodyStyle !== undefined)
-                    elem.push({ url: [{ loc: url }, { lastmod: dateFormat(now, 'yyyy/mm/dd')} ] });
-            });
+            elem.push({ url: [{ loc: `${baseUrl}/category/${key}` }, { lastmod: dateFormat(now, 'yyyy/mm/dd') }] });
+            elem.push({ url: [{ loc: `${baseUrl}/new-car-deals/category/${key}` }, { lastmod: dateFormat(now, 'yyyy/mm/dd') }] });
         });
 
         page++;
